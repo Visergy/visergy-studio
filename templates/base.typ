@@ -17,7 +17,7 @@
 
 #let lines(items) = items.join(linebreak())
 
-#let label-text(body, fill: colours.muted) = text(size: 8pt, fill: fill, tracking: 0.08em, upper(body))
+#let label-text(body, fill: colours.muted) = text(size: 8pt, weight: "semibold", fill: fill, tracking: 0.08em, upper(body))
 
 #let draft-mark = rotate(-35deg, text(size: 96pt, weight: "bold", fill: luma(92%))[DRAFT])
 
@@ -66,84 +66,107 @@
 // Width of the corner sunburst on the cover and back page; it is centred on the page corner.
 #let corner-sunburst = 130mm
 
-// Full-page cover. The blue field fills the top of the page down to a shallow diagonal, with a
-// second blue stripe running parallel below it, separated by a narrow white gap. A small white
-// sunburst sits in the top-right corner. Title on blue, details on white at the lower right, contact strip at the
-// foot. `details` is a list of (label, value) pairs; empty values are skipped.
+// Cover grid: everything lines up on these side margins. The diagonal runs from `cut-right` down
+// the right edge to `cut-left` down the left edge; the back page turns it through 180 degrees.
+#let cover-margin = 22mm
+#let cover-width = 210mm - 2 * cover-margin
+#let cut-right = 110mm
+#let cut-left = 200mm
+#let strip-height = 14mm
+
+// The title, set as large as fits. Two-line titles are balanced so no word is left on its own
+// line; titles that need three or more lines drop to the smallest size and wrap normally.
+#let cover-title(title, width) = context {
+  let style(size, body) = text(size: size, weight: "semibold", fill: white, body)
+  let words = title.split(" ").filter(w => w != "")
+  for size in (40pt, 32pt) {
+    if measure(style(size, title)).width <= width {
+      return style(size, title)
+    }
+    let best = none
+    for i in range(1, words.len()) {
+      let first = words.slice(0, i).join(" ")
+      let second = words.slice(i).join(" ")
+      let w = calc.max(measure(style(size, first)).width, measure(style(size, second)).width)
+      if w <= width and (best == none or w < best.at(0)) { best = (w, first, second) }
+    }
+    if best != none {
+      return par(leading: size * 0.22, style(size, best.at(1)) + linebreak() + style(size, best.at(2)))
+    }
+  }
+  par(leading: 26pt * 0.22, style(26pt, title))
+}
+
+// Full-page cover for proposals and reports. The blue field fills the top of the page down to a
+// shallow diagonal, with the white sunburst in the top-right corner as the one graphic device.
+// The kicker, title and subtitle sit at the foot of the blue; the details table sits on white
+// below, above a strip with the email and copyright line. The ABN is on the back page only.
+// `details` is a list of (label, value) pairs; empty values are skipped.
 #let cover(data, title, subtitle: none, details: ()) = page(
   header: none,
   footer: none,
   margin: 0mm,
 )[
   #let b = data.business
-  #let faint = white.transparentize(30%)
-  // Diagonal from 110mm down the right edge to 200mm down the left edge. Drawn as three layers:
-  // the stripe's lower edge in blue, the white gap over it, then the main blue field on top.
-  #let stripe-bottom = 16mm
-  #let gap-bottom = 5mm
-  #place(polygon(fill: colours.primary,
-    (0mm, 0mm), (210mm, 0mm), (210mm, 110mm + stripe-bottom), (0mm, 200mm + stripe-bottom)))
-  #place(polygon(fill: white,
-    (0mm, 0mm), (210mm, 0mm), (210mm, 110mm + gap-bottom), (0mm, 200mm + gap-bottom)))
-  #place(polygon(fill: colours.primary, (0mm, 0mm), (210mm, 0mm), (210mm, 110mm), (0mm, 200mm)))
+  #let x = cover-margin
+  #place(polygon(fill: colours.primary, (0mm, 0mm), (210mm, 0mm), (210mm, cut-right), (0mm, cut-left)))
   #place(top + left, dx: 210mm - corner-sunburst / 2, dy: -corner-sunburst / 2, brand-image("sunburst_white", corner-sunburst))
-  #place(top + left, dx: 22mm, dy: 24mm, brand-image("white", 64mm))
+  #place(top + left, dx: x, dy: 24mm, brand-image("white", 64mm))
 
-  // Long titles drop a size so they stay on the blue.
-  #let title-size = if title.len() > 45 { 26pt } else { 32pt }
-  #place(top + left, dx: 22mm, dy: 70mm, block(width: 130mm, stack(
-    spacing: 4mm,
-    text(size: 11pt, fill: faint, tracking: 0.15em, weight: "semibold", upper(data.doc.title)),
-    par(leading: title-size * 0.3, text(size: title-size, weight: "semibold", fill: white, title)),
-    ..if subtitle not in (none, "") { (text(size: 16pt, weight: "light", fill: faint, subtitle),) },
-  )))
+  // Bottom-anchored at 122mm, which keeps a 140mm-wide block clear of the diagonal.
+  #place(bottom + left, dx: x, dy: 122mm - 297mm, block(width: 140mm)[
+    #text(size: 11pt, fill: white.transparentize(25%), tracking: 0.15em, weight: "semibold", upper(data.doc.title))
+    #v(5mm, weak: true)
+    #cover-title(title, 140mm)
+    #if subtitle not in (none, "") {
+      v(8mm, weak: true)
+      text(size: 18pt, fill: white.transparentize(10%), subtitle)
+    }
+  ])
 
-  #place(bottom + right, dx: -22mm, dy: -28mm, block(width: 95mm)[
-    #set text(size: 9.5pt)
-    #set align(left)
+  // Details span the full grid width, between the same margins as the title and the strip text.
+  #place(bottom + left, dx: x, dy: -(strip-height + 14mm), block(width: cover-width)[
+    #line(length: 100%, stroke: 0.5pt + colours.accent)
+    #v(5mm, weak: true)
+    #set text(size: 10pt)
     #let shown = details.filter(d => d.at(1) not in (none, ""))
     #grid(
-      columns: (24mm, 1fr),
-      row-gutter: 3.2mm,
+      columns: (30mm, 1fr),
+      row-gutter: 3.4mm,
       ..shown.map(d => (label-text(d.at(0)), d.at(1))).flatten()
     )
   ])
 
-  #place(bottom + left, block(fill: colours.primary, width: 100%, height: 12mm, inset: (x: 22mm))[
-    #set text(size: 9pt, fill: white)
-    #align(horizon)[#b.email #h(8mm) #b.phone #h(1fr) #b.abn_label #b.abn]
+  #place(bottom + left, block(fill: colours.primary, width: 100%, height: strip-height, inset: (x: x))[
+    #set text(size: 10pt, fill: white)
+    #align(horizon)[#b.email #h(1fr) #text(size: 9pt, data.doc.copyright)]
   ])
 ]
 
-// Closing page: the cover turned through 180 degrees. White above, the blue field below a
-// diagonal with the separate blue stripe on its upper side, the small sunburst in the bottom-left
-// corner, a thin strip at the top, business details on white and the white logo on blue.
-#let back-page(data) = page(header: none, footer: none, margin: 0mm)[
+// Closing page: the cover turned through 180 degrees. White above with the business details, the
+// blue field below the diagonal with the white logo, the sunburst in the bottom-left corner and a
+// thin strip at the top to pair with the cover's contact strip. Shows the name, ABN and email;
+// `contact: true` adds the address and phone (off for every document since 2026-10-08).
+#let back-page(data, contact: false) = page(header: none, footer: none, margin: 0mm)[
   #let b = data.business
-  // The cover's cut, rotated: 187mm down the left edge up to 97mm down the right edge.
-  #let stripe-top = 16mm
-  #let gap-top = 5mm
   #place(polygon(fill: colours.primary,
-    (0mm, 297mm), (210mm, 297mm), (210mm, 97mm - stripe-top), (0mm, 187mm - stripe-top)))
-  #place(polygon(fill: white,
-    (0mm, 297mm), (210mm, 297mm), (210mm, 97mm - gap-top), (0mm, 187mm - gap-top)))
-  #place(polygon(fill: colours.primary, (0mm, 297mm), (210mm, 297mm), (210mm, 97mm), (0mm, 187mm)))
+    (0mm, 297mm), (210mm, 297mm), (210mm, 297mm - cut-left), (0mm, 297mm - cut-right)))
   #place(top + left, dx: -corner-sunburst / 2, dy: 297mm - corner-sunburst / 2, brand-image("sunburst_white", corner-sunburst))
-  #place(top + left, rect(fill: colours.primary, width: 100%, height: 12mm))
+  #place(top + left, rect(fill: colours.primary, width: 100%, height: strip-height))
 
-  // Mirrors the cover: details on white at the upper left, the logo alone on blue at the lower right.
-  #place(top + left, dx: 22mm, dy: 30mm, block(width: 95mm)[
-    #set text(size: 9.5pt)
+  #place(top + left, dx: cover-margin, dy: strip-height + 18mm, block(width: 95mm)[
+    #set text(size: 10pt)
     #text(weight: "semibold", fill: colours.primary, b.display_name) \
-    #if b.trading_as != "" and b.trading_as != b.name [#b.name trading as #b.trading_as \ ]
     #b.abn_label #b.abn
     #v(2mm)
-    #lines(b.address)
-    #v(2mm)
-    #b.email \
-    #b.phone
+    #if contact {
+      lines(b.address)
+      v(2mm)
+    }
+    #b.email
+    #if contact [\ #b.phone]
   ])
-  #place(bottom + right, dx: -22mm, dy: -24mm, brand-image("white", 64mm))
+  #place(bottom + right, dx: -cover-margin, dy: -24mm, brand-image("white", 64mm))
 ]
 
 #let party(label, name, lines-list) = [

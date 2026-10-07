@@ -27,7 +27,7 @@
     ..data.client.address,
     ..(if data.client.abn != "" { (b.abn_label + " " + data.client.abn,) } else { () }),
   )),
-  party("From", b.display_name, (b.abn_label + " " + b.abn, ..b.address, b.email)),
+  party("From", b.display_name, (b.abn_label + " " + b.abn, b.email)),
   grid(
     columns: 2,
     column-gutter: 4mm,
@@ -47,15 +47,25 @@
   table.header(label-text("Description"), label-text("Amount")),
   [#strong(data.project.title) \ #inv.description], inv.subtotal,
 )
+#let gst = data.business.gst_registered
 #align(right, table(
   columns: (auto, 30mm),
   align: (left, right),
   stroke: none,
-  [Subtotal], inv.subtotal,
-  inv.tax_label, inv.tax,
-  table.hline(stroke: 0.75pt + colours.primary),
+  ..if gst {
+    (
+      [Subtotal], inv.subtotal,
+      inv.tax_label, inv.tax,
+      table.hline(stroke: 0.75pt + colours.primary),
+    )
+  },
   strong[Total due (#data.currency)], strong(inv.total),
 ))
+#if not gst {
+  align(right, text(size: 9pt, fill: colours.muted)[
+    No #inv.tax_name is charged: #data.business.display_name is not registered for #inv.tax_name.
+  ])
+}
 
 #v(1fr)
 #block(fill: colours.primary.lighten(90%), inset: 5mm, width: 100%, radius: 2pt)[

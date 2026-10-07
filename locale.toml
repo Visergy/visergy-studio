@@ -14,7 +14,7 @@ tax_invoice_title = "Tax invoice"
 report_title = "Report"
 abn_label = "ABN"
 
-date_format = "%d %B %Y"          # strftime, used for display strings in rendered documents
+date_format = "%-d %B %Y"         # strftime (%-d: no leading zero), via render.format_date
 
 financial_year_start_month = 7    # financial year starts 1 July
 financial_year_start_day = 1

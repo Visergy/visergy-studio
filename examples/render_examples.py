@@ -1,6 +1,7 @@
 """Render an example proposal, invoice and report to examples/output/.
 
-Uses examples/sample.toml in place of config.toml and the database, so it runs on a fresh checkout:
+Uses examples/sample.toml in place of the database, so it runs on a fresh checkout. If config.toml
+exists, your business and bank details from it replace the sample ones:
 
     uv run python examples/render_examples.py
 """
@@ -11,9 +12,10 @@ import tomllib
 from datetime import date, timedelta
 from pathlib import Path
 
+from visergy.config import config_path, load_config
 from visergy.money import format_money, format_rate_bp, rate_to_bp, to_cents, totals
 from visergy.paths import pdf_filename
-from visergy.render import render_pdf
+from visergy.render import format_date, render_pdf
 from visergy.reports import load_report_source, render_report
 from visergy.states import valid_until
 from visergy.terms import load_terms
@@ -29,25 +31,55 @@ def load_toml(path: Path) -> dict:
 
 
 def fmt_date(d: date, locale: dict) -> str:
-    return d.strftime(locale["date_format"])
+    return format_date(d, locale["date_format"])
 
 
 def common_data(sample: dict, locale: dict, title: str, reference: str) -> dict:
     """The parts every document shares: doc header, business, client, contact, project."""
     b = sample["business"]
+    display_name = b["trading_as"] or b["name"]
     return {
         "doc": {
             "title": title,
             "reference": reference,
             "date": fmt_date(TODAY, locale),
             "draft": False,
+            "copyright": f"© {TODAY.year} {display_name}. All rights reserved.",
         },
-        "business": {**b, "display_name": b["trading_as"] or b["name"], "abn_label": "ABN"},
+        "business": {**b, "display_name": display_name, "abn_label": "ABN"},
         "client": sample["client"],
         "contact": sample.get("contact"),
         "project": sample["project"],
         "currency": locale["currency"],
     }
+
+
+def apply_config(sample: dict) -> dict:
+    """Swap in the business and bank details from config.toml, when it exists."""
+    if not config_path().is_file():
+        return sample
+    cfg = load_config()
+    b = cfg.business
+    business = {
+        "name": b.name,
+        "trading_as": b.trading_as,
+        "abn": b.abn,
+        "address": list(b.address),
+        "email": b.email,
+        "phone": b.phone,
+        "gst_registered": b.gst_registered,
+    }
+    bank = {
+        "account_name": cfg.bank.account_name,
+        "bsb": cfg.bank.bsb,
+        "account_number": cfg.bank.account_number,
+    }
+    return {**sample, "business": business, "bank": bank}
+
+
+def tax_rate_bp(sample: dict, locale: dict) -> int:
+    """The locale's GST rate, or 0 when the business is not registered for GST."""
+    return rate_to_bp(locale["tax_rate"]) if sample["business"]["gst_registered"] else 0
 
 
 def tax_label(locale: dict, rate_bp: int) -> str:
@@ -56,7 +88,7 @@ def tax_label(locale: dict, rate_bp: int) -> str:
 
 def proposal_data(sample: dict, locale: dict) -> dict:
     body = load_toml(HERE / "quote.toml")
-    rate_bp = rate_to_bp(locale["tax_rate"])
+    rate_bp = tax_rate_bp(sample, locale)
     t = totals(to_cents(body["fee"]), rate_bp)
     terms = load_terms("v1", REPO / "terms")
     data = common_data(sample, locale, locale["quote_title"], "26001 v1")
@@ -81,14 +113,17 @@ def proposal_data(sample: dict, locale: dict) -> dict:
 
 
 def invoice_data(sample: dict, locale: dict) -> dict:
-    rate_bp = rate_to_bp(locale["tax_rate"])
+    rate_bp = tax_rate_bp(sample, locale)
     t = totals(to_cents(sample["invoice"]["amount"]), rate_bp)
     days = locale["payment_terms_days"]
-    data = common_data(sample, locale, locale["tax_invoice_title"], "26002")
+    gst = sample["business"]["gst_registered"]
+    title = locale["tax_invoice_title"] if gst else locale["invoice_title"]
+    data = common_data(sample, locale, title, "26002")
     data["invoice"] = {
         "description": sample["invoice"]["description"],
         "quote_reference": "26001 v1",
         "subtotal": format_money(t.subtotal_cents),
+        "tax_name": locale["tax_name"],
         "tax_label": tax_label(locale, rate_bp),
         "tax": format_money(t.tax_cents),
         "total": format_money(t.total_cents),
@@ -102,6 +137,7 @@ def invoice_data(sample: dict, locale: dict) -> dict:
 def report_data(sample: dict, locale: dict) -> dict:
     data = common_data(sample, locale, locale["report_title"], "0059-R01 Rev B")
     data["report"] = {
+        "number": "0059-R01",
         "revision": "B",
         "history": [
             {
@@ -120,7 +156,7 @@ def report_data(sample: dict, locale: dict) -> dict:
 
 
 def main() -> None:
-    sample = load_toml(HERE / "sample.toml")
+    sample = apply_config(load_toml(HERE / "sample.toml"))
     locale = load_toml(REPO / "locale.toml")["locale"]
     OUTPUT.mkdir(exist_ok=True)
 

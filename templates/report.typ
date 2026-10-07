@@ -8,11 +8,13 @@
 #let r = data.report
 #show: setup.with(data)
 
+#let current = r.history.find(h => h.revision == r.revision)
 #cover(data, r.title, subtitle: r.subtitle, details: (
   ("Client", data.client.name),
+  ("Attention", if data.contact != none { data.contact.name }),
   ("Project", data.project.number + " · " + data.project.title),
-  ("Document", data.doc.reference),
-  ("Revision", r.revision),
+  ("Document", r.number),
+  ("Revision", if current != none { r.revision + " · " + current.description } else { r.revision }),
   ("Date", data.doc.date),
 ))
 

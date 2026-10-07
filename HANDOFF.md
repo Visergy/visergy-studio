@@ -15,7 +15,9 @@ What works today:
 - Typst templates for proposals, invoices and reports with the Visergy branding (`templates/`,
   `brand/`).
 - `uv run python examples/render_examples.py` renders a sample proposal, invoice and report to
-  `examples/output/` from made-up data. No database or `config.toml` is needed.
+  `examples/output/` from made-up data, with your business and bank details from `config.toml`
+  if it exists. No database is needed.
+- `config.py` loads and checks `config.toml` (build order step 5, pulled forward).
 
 ## Set up on a new machine
 
@@ -31,8 +33,8 @@ uv run python examples/render_examples.py
   internet once; after that it is cached.
 - Fonts are in the repo (`brand/fonts/`), and system fonts are ignored, so PDFs come out the
   same on every machine.
-- `config.toml` is not needed yet. When it is, copy `config.example.toml` and fill it in; never
-  commit it.
+- Copy `config.example.toml` to `config.toml` and fill it in; never commit it. It is optional for
+  now: without it the examples use the made-up details in `examples/sample.toml`.
 
 ## Decisions made so far
 
@@ -45,8 +47,9 @@ All recorded in `docs/DESIGN.md` section 11. The ones that most shape the next s
 - **"Proposal" is the rendered quote**, not a separate record.
 - **Reports are Markdown** with TOML front matter, rendered by `cmarker` inside Typst, always
   with `raw-typst: false` (otherwise Markdown comments can run Typst code).
-- **Brand**: diagonal blue cover with a white-gap blue stripe, back page is the cover turned
-  through 180 degrees. Source Sans 3 stands in for Myriad Pro (licensing). Original artwork is in
+- **Brand**: diagonal blue cover with the white sunburst as the one graphic device (revised
+  2026-10-08 after a design review, see DESIGN section 11), back page is the cover turned through
+  180 degrees. Source Sans 3 stands in for Myriad Pro (licensing). Original artwork is in
   Nextcloud `Work/Visergy/Admin/Brand/OneDegree/`; see `brand/README.md`.
 
 ## Next step: build order step 3 (schema and `db.py`)
@@ -66,18 +69,21 @@ trigger and constraint. Points from the review that the schema has to settle:
   local time; timestamps stay UTC.
 - `numbering.py` expects a `counters(key TEXT PRIMARY KEY, value INTEGER NOT NULL)` table.
 
+## Settled 2026-10-08
+
+- No Docker.
+- Accepting an expired quote warns and goes ahead.
+- A report cannot be issued without an accepted quote on its project (trigger in migration 001).
+- Restore is a `vis restore` command in step 9, with a check against reusing numbers (DESIGN section 11).
+
 ## Open questions
 
-- Docker: proposed to skip for this single-user CLI, not yet confirmed.
-- Whether accepting an expired quote warns or blocks.
-- Whether a report can be issued for a project with no accepted quote.
-- How restore works (`vis restore` or documented steps).
 - Standard terms wording (`terms/terms-v1.toml` is a draft with TODOs for IP and liability).
 
 ## Parked for later
 
-- Cover refinements: the stripe and gap widths, sunburst size (`corner-sunburst`) and text
-  positions are near the top of the cover and back-page sections of `templates/base.typ`.
+- Cover refinements: the diagonal (`cut-right`, `cut-left`), sunburst size (`corner-sunburst`),
+  margins and title sizes are constants just above `cover()` in `templates/base.typ`.
 - A Myriad Pro licence that allows PDF embedding would let the real brand font replace
   Source Sans 3 (one line in `brand/theme.toml`).
 

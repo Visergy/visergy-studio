@@ -1,5 +1,6 @@
-# Sample business, client and project used by render_examples.py in place of config.toml and the
-# database. All details are made up; the bank details are placeholders.
+# Sample business, client and project used by render_examples.py in place of the database. All
+# details are made up; the bank details are placeholders. When config.toml exists, its [business]
+# and [bank] replace the ones here.
 
 [business]
 name = "Alex Example"
@@ -8,6 +9,7 @@ abn = "12 345 678 901"
 address = ["1 Example Street", "Melbourne VIC 3000"]
 email = "hello@visergy.example"
 phone = "0400 000 000"
+gst_registered = true
 
 [bank]
 account_name = "Alex Example"

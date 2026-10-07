@@ -13,16 +13,21 @@ from __future__ import annotations
 import json
 import shutil
 import tempfile
+from datetime import date
 from pathlib import Path
 
 import typst
 
 from .errors import RenderError
+from .paths import REPO_ROOT
 
-# The repo root, found from src/visergy/render.py. Works for the editable install uv makes.
-REPO_ROOT = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = REPO_ROOT / "templates"
 BRAND_DIR = REPO_ROOT / "brand"
+
+
+def format_date(d: date, fmt: str) -> str:
+    """strftime, plus `%-d` for the day without a leading zero on every platform ("7 October")."""
+    return d.strftime(fmt.replace("%-d", str(d.day)))
 
 
 def render_pdf(template: str, data: dict, files: dict[str, Path] | None = None) -> bytes:

@@ -56,6 +56,7 @@ Constraints to put in the schema:
 ## 5. Quotes and invoices
 
 - Quotes are always a single fixed fee.
+- Accepting an expired quote warns but is allowed.
 - Quote statuses stored: draft, issued, accepted, declined. **Expired** and **superseded** are derived (issue date plus validity days; a higher issued version exists).
 - Changing an issued quote creates a new version row with the same number. Revising an accepted quote is not allowed.
 - Invoice statuses: draft, issued, paid, void. Changing an issued invoice means void and reissue. A paid invoice cannot be voided (that needs a credit note, out of scope).
@@ -69,6 +70,7 @@ Constraints to put in the schema:
 - A report is a Markdown file in the project folder, with a TOML front matter block between `+++` lines (title, subtitle, optional `toc = false`). Images use normal Markdown tags with paths relative to the Markdown file; the alt text becomes the figure caption.
 - Project number and title, client name and address and the project contact come from the database (found via `project.txt`), never from the Markdown.
 - Report statuses stored: draft, issued. **Superseded** is derived (a later revision is issued).
+- A report can only be issued for a project with an accepted quote.
 - Numbers are per project (`0059-R01`, counter key `report:0059`), allocated at the first issue. Revisions are letters (`A`, `B`, ...). A new revision is a new row with the same number, like quote versions.
 - At issue the row freezes: the source path, a sha256 over the Markdown and every referenced image, the render JSON, the PDF path and its sha256.
 - The document control table in the PDF lists the issued revisions of that report number (revision, date, title) from the database.
@@ -136,11 +138,11 @@ vis status                     not yet invoiced, invoiced but unpaid
 2. Example output (pulled forward, done): `base.typ`, `proposal.typ`, `invoice.typ`, `report.typ`, `render.py`, `reports.py`, render tests, and `examples/render_examples.py`, which renders all three documents from sample data without a database.
 3. Schema migration 001 (tables, checks, triggers) and `db.py` (connect, transaction, migrate); tests for triggers and constraints.
 4. `backup.py` (backup API, naming, pruning) with tests.
-5. `config.py`, then `invoicing.py` (cap rule, remainder) and `queries.py` (derived statuses) with tests.
+5. `config.py` (**done**, pulled forward 2026-10-08), then `invoicing.py` (cap rule, remainder) and `queries.py` (derived statuses) with tests.
 6. Render-data builders: turn database rows plus config and locale into the template JSON (replacing the sample builders in `examples/render_examples.py`).
 7. CLI: `init` (creates the database and seeds the project counter from `numbering.last_project`), `backup`, `client`, `project`.
 8. Quote commands, then invoice commands, then report commands (`report-starter.md`, source hash at issue).
-9. `vis status`, polish, restore instructions.
+9. `vis status`, `vis restore`, polish.
 
 ## 11. Decisions
 
@@ -165,16 +167,39 @@ Reports and branding (added 2026-10-07):
 - Reports are written in Markdown and rendered with `cmarker` inside Typst, not converted with Pandoc: no extra dependency, and the text stays data rather than Typst source.
 - Front matter is TOML (`+++`), because `tomllib` is in the standard library and YAML is not.
 - Reports are stored in the database with per-project numbers and lettered revisions, so issued revisions are frozen and the document control table can be generated.
-- Contents page and numbered headings and figures are on by default. No confidentiality notice for now.
+- Contents page and numbered headings and figures are on by default. No confidentiality notice; the cover carries a copyright line instead (see the cover revision below).
 - Rendering was built before the database so example output could be reviewed early. The template JSON contract is defined by the builders in `examples/render_examples.py` until step 6 moves them into the package.
 - Report images: inline Markdown image tags only, relative paths inside the report folder (symlinks that escape it are rejected), no remote URLs. Images are copied to `/report/` in the build folder.
 - Page numbers count every page, including the cover and back page.
-- Brand: logos and the sunburst are SVGs converted from the original EPS files; the cover has a blue field down to a shallow diagonal with a parallel blue stripe below the cut, separated by a narrow white gap (an earlier translucent turquoise band made an off-brand tint, so the cover uses only the card blue and turquoise stays in the logo), a small white sunburst top right, the title on blue, details on white at the lower right and a contact strip at the foot (titles over 45 characters drop from 32pt to 26pt); the back page is the cover turned through 180 degrees (white above with the business details, blue below the band with the white logo, sunburst bottom left, thin strip at the top) so the two balance as a pair. Myriad Pro is commercially licensed, so Source Sans 3 (OFL) is bundled in its place. See `brand/README.md`.
+- Brand: logos and the sunburst are SVGs converted from the original EPS files; the cover has a blue field down to a shallow diagonal (earlier versions added a translucent turquoise band, then a parallel blue stripe; both were dropped, see the cover revision below), a small white sunburst top right, the title on blue, details on white below and a contact strip at the foot; the back page is the cover turned through 180 degrees (white above with the business details, blue below the diagonal with the white logo, sunburst bottom left, thin strip at the top) so the two balance as a pair. Myriad Pro is commercially licensed, so Source Sans 3 (OFL) is bundled in its place. See `brand/README.md`.
+
+Cover revision (2026-10-08), from an outside design review, applied to proposals and reports:
+
+- The sunburst is the one graphic device. The blue field ends at a single diagonal; the white gap and second stripe are gone (they read as a generic template).
+- Everything sits on the 22mm cover margins. The details table spans the full width between them, under a thin turquoise rule, so its edges line up with the title and the strip text.
+- The title is measured: 40pt if it fits on one line or two, else 32pt, else 26pt wrapping freely. Two-line titles are balanced so no word sits alone on a line. The title block is anchored to the foot of the blue field, with the subtitle in a heavier weight, more contrast and a clear gap.
+- Report details drop the duplicated revision: "Document 0059-R01" and "Revision B · <description of that revision>". Proposals and reports show the contact as "Attention".
+- The cover strip carries only the email (left) and a copyright line, "© <issue year> Visergy. All rights reserved." (right); the text is built in Python (`doc.copyright`). No phone or ABN on the cover: the ABN goes on the back page only.
+- Your address and phone appear on no document. Back pages show the name, ABN and email (`back-page(data, contact: true)` brings the address and phone back), and the invoice "From" block shows the name, ABN and email.
+- Dates drop the leading zero ("7 October 2026"): `locale.toml` uses `%-d`, which `render.format_date` supports on every platform.
+- Labels are semibold and the muted colour is darker (`#595959`); the contact strip text is 10pt.
+- The back page shows "Visergy" and the ABN without "trading as".
+
+Settled 2026-10-08:
+
+- No Docker. It is a single-user CLI with the live database on local disk and backups going to Nextcloud, so a container adds nothing. This is a deliberate exception to the general preference to containerise.
+- Accepting an expired quote prints a warning and goes ahead. It is not blocked.
+- A report cannot be issued unless its project has an accepted quote. Enforce this in the database (a trigger on issue) and give a clear CLI error.
+- Restore is a `vis restore` command (build order step 9). It lists or takes a named snapshot, runs an integrity check and a schema version check, refuses to replace a live database without `--force` (and then renames the old file rather than deleting it), copies with the backup API, migrates, and scans project folders for issued PDFs numbered beyond the counters so a restored older snapshot cannot reuse a number.
+
+Config (2026-10-08):
+
+- `config.py` loads `config.toml` from `VISERGY_CONFIG`, else the repo root; `VISERGY_DB` overrides `[paths].database`. It checks types, the ABN checksum and the BSB format, and normalises both (`12 345 678 901`, `123-456`).
+- Fields still holding the `config.example.toml` values load without error so the tool works while details are filled in. `Config.placeholders()` lists them; issuing a document must refuse while a field it prints is still a placeholder (to wire in at step 8).
+- Bank fields are kept out of reprs, and config errors name the field, never its value.
+- Not registered for GST: proposals show the fixed fee alone and invoices show the total alone, each with a "No GST is charged" note, rather than a 0% GST row. The invoice title is "Invoice".
+- `examples/render_examples.py` uses the business and bank details from `config.toml` when it exists; the render tests always use `examples/sample.toml`.
 
 Still open:
 
-- Whether accepting an expired quote should warn or block.
 - Exact wording of the standard terms (the v1 file is a starting draft).
-- How a restore should work (a `vis restore` command, or documented manual steps).
-- Whether a report can be issued for a project with no accepted quote.
-- Docker: proposed to skip (single-user CLI, live database on local disk, backups to Nextcloud), not yet confirmed. The global preference is to containerise by default.

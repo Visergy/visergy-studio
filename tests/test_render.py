@@ -1,12 +1,13 @@
 """Compiles the real templates via the example script's data. Marked `render` (slower)."""
 
 import importlib.util
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 from visergy.errors import RenderError
-from visergy.render import render_pdf
+from visergy.render import format_date, render_pdf
 from visergy.reports import load_report_source, render_report
 
 pytestmark = pytest.mark.render
@@ -26,6 +27,18 @@ def ex():
     return module
 
 
+@pytest.mark.parametrize(
+    ("d", "fmt", "expected"),
+    [
+        (date(2026, 10, 7), "%-d %B %Y", "7 October 2026"),
+        (date(2026, 10, 17), "%-d %B %Y", "17 October 2026"),
+        (date(2026, 10, 7), "%d %B %Y", "07 October 2026"),
+    ],
+)
+def test_format_date(d, fmt, expected):
+    assert format_date(d, fmt) == expected
+
+
 def test_proposal(ex):
     assert render_pdf("proposal.typ", ex.proposal_data(ex.sample, ex.locale)).startswith(b"%PDF")
 
@@ -37,6 +50,26 @@ def test_invoice(ex):
 def test_report(ex):
     source = load_report_source(EXAMPLES / "report" / "report.md")
     assert render_report(source, ex.report_data(ex.sample, ex.locale)).startswith(b"%PDF")
+
+
+@pytest.fixture
+def not_gst_registered(ex):
+    sample = {**ex.sample, "business": {**ex.sample["business"], "gst_registered": False}}
+    return sample
+
+
+def test_proposal_not_gst_registered(ex, not_gst_registered):
+    data = ex.proposal_data(not_gst_registered, ex.locale)
+    assert data["quote"]["tax"] == "$0.00"
+    assert data["quote"]["fee"] == data["quote"]["total"]
+    assert render_pdf("proposal.typ", data).startswith(b"%PDF")
+
+
+def test_invoice_not_gst_registered_is_not_a_tax_invoice(ex, not_gst_registered):
+    data = ex.invoice_data(not_gst_registered, ex.locale)
+    assert data["doc"]["title"] == ex.locale["invoice_title"]
+    assert data["invoice"]["total"] == data["invoice"]["subtotal"]
+    assert render_pdf("invoice.typ", data).startswith(b"%PDF")
 
 
 def test_draft_proposal(ex):

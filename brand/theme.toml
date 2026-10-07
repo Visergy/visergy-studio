@@ -5,7 +5,7 @@
 primary = "#0d8dbb"               # business card blue: cover panel, headings
 accent = "#00abbf"                # logo turquoise: rules, highlights
 text = "#262626"
-muted = "#6b6b6b"                 # headers, footers, captions
+muted = "#595959"                 # labels, headers, footers, captions
 
 [fonts]
 body = "Source Sans 3"            # open-licence stand-in for Myriad Pro (bundled in brand/fonts/)

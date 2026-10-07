@@ -8,8 +8,8 @@ Read `docs/DESIGN.md` first. It holds the data model, the rules and the build or
 
 This is a starter kit, not a working app.
 
-- Present: `pyproject.toml`, `config.example.toml`, `locale.toml`, `terms/terms-v1.toml`, `examples/quote.toml`, `brand/` (logos, theme colours, fonts), core modules in `src/visergy/` (`money`, `states`, `paths`, `numbering`, `terms`, `errors`, `render`, `reports`) with tests, Typst templates in `templates/` (proposal, invoice, report), and `examples/render_examples.py`, which renders all three from sample data.
-- Missing: SQL schema and migrations, `db`, `backup`, `config`, `invoicing`, `queries`, the render-data builders and `cli`.
+- Present: `pyproject.toml`, `config.example.toml`, `locale.toml`, `terms/terms-v1.toml`, `examples/quote.toml`, `brand/` (logos, theme colours, fonts), core modules in `src/visergy/` (`money`, `states`, `paths`, `numbering`, `terms`, `errors`, `render`, `reports`, `config`) with tests, Typst templates in `templates/` (proposal, invoice, report), and `examples/render_examples.py`, which renders all three from sample data.
+- Missing: SQL schema and migrations, `db`, `backup`, `invoicing`, `queries`, the render-data builders and `cli`.
 - `numbering.py` assumes a `counters(key, value)` table that the schema must provide.
 - `[project.scripts]` is not set yet. Add `vis = "visergy.cli:main"` once `cli.py` exists.
 

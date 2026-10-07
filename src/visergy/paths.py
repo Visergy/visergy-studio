@@ -11,6 +11,9 @@ from pathlib import Path
 
 from .errors import ProjectNotFound
 
+# The repo root, found from src/visergy/paths.py. Works for the editable install uv makes.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 CONTROL_FILE = "project.txt"
 PROJECT_NUMBER_RE = re.compile(r"^\d{4}$")
 
