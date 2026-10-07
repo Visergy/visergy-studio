@@ -1,0 +1,34 @@
+# Example quote body. Copy into a project folder, edit, then (Phase 1) import with:
+#   vis quote new --from quote.toml
+# The text is stored as JSON in the database when the draft is created, and frozen when issued.
+
+title = "Thermal performance review"
+fee = "4500.00"                   # fixed fee, EX-GST, 2 decimal places max
+validity_days = 30                # optional; defaults to config defaults.quote_validity_days
+
+summary = """
+Review of the proposed envelope and services strategy against the project's thermal performance targets.
+
+Findings are summarised in a short report with recommendations.
+"""
+
+scope = [
+    "Review of design documentation supplied by the client.",
+    "Steady-state and dynamic thermal analysis of up to three design options.",
+]
+
+deliverables = [
+    "Summary report (PDF) with results and recommendations.",
+    "One review meeting with the project team.",
+]
+
+exclusions = [
+    "Site visits and measurement.",
+    "Certification or rating submissions.",
+]
+
+assumptions = [
+    "Drawings and specifications are supplied within 5 business days of acceptance.",
+]
+
+timing = "Draft results within three weeks of acceptance and receipt of inputs."

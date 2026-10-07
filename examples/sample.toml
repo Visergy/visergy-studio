@@ -1,0 +1,31 @@
+# Sample business, client and project used by render_examples.py in place of config.toml and the
+# database. All details are made up; the bank details are placeholders.
+
+[business]
+name = "Alex Example"
+trading_as = "Visergy"
+abn = "12 345 678 901"
+address = ["1 Example Street", "Melbourne VIC 3000"]
+email = "hello@visergy.example"
+phone = "0400 000 000"
+
+[bank]
+account_name = "Alex Example"
+bsb = "000-000"
+account_number = "00000000"
+
+[client]
+name = "Northbank Developments Pty Ltd"
+abn = "98 765 432 109"
+address = ["Level 4, 200 Collins Street", "Melbourne VIC 3000"]
+
+[contact]
+name = "Sam Taylor"
+
+[project]
+number = "P2026-001"
+title = "Southbank residential tower"
+
+[invoice]
+description = "Progress claim 1: design review and thermal analysis (50% of fixed fee)."
+amount = "2250.00"

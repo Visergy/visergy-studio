@@ -1,0 +1,21 @@
+# Australian specifics. Committed (no secrets). Rates are strings so no float ever touches them.
+
+[locale]
+code = "en-AU"
+currency = "AUD"
+currency_symbol = "$"
+
+tax_name = "GST"
+tax_rate = "0.10"                 # applied only when business.gst_registered = true
+
+quote_title = "Proposal"          # the rendered quote document
+invoice_title = "Invoice"
+tax_invoice_title = "Tax invoice"
+report_title = "Report"
+abn_label = "ABN"
+
+date_format = "%d %B %Y"          # strftime, used for display strings in rendered documents
+
+financial_year_start_month = 7    # financial year starts 1 July
+financial_year_start_day = 1
+payment_terms_days = 14

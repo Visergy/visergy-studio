@@ -1,0 +1,22 @@
+# Visergy brand theme. Committed (no secrets). Read directly by the Typst templates with toml().
+# Colours sampled from the brand files (see brand/README.md).
+
+[colours]
+primary = "#0d8dbb"               # business card blue: cover panel, headings
+accent = "#00abbf"                # logo turquoise: rules, highlights
+text = "#262626"
+muted = "#6b6b6b"                 # headers, footers, captions
+
+[fonts]
+body = "Source Sans 3"            # open-licence stand-in for Myriad Pro (bundled in brand/fonts/)
+heading = "Source Sans 3"
+
+[logo]
+file = "logo.svg"                 # turquoise wordmark, for white backgrounds
+white = "logo-white.svg"          # for the blue cover panel
+sunburst = "sunburst.svg"         # radial lines, back page
+sunburst_white = "sunburst-white.svg"  # radial lines, cover panel
+
+[page]
+paper = "a4"
+margin_mm = 20

@@ -1,0 +1,30 @@
+# Standard terms, version v1. Committed (not sensitive).
+# STARTING DRAFT ONLY: have it reviewed by a lawyer or your accountant before you rely on it.
+# Never edit a published version in place. Copy to terms-v2.toml and bump defaults.terms_version.
+# Each quote stores terms_version plus a hash of this content at the moment it is issued.
+
+version = "v1"
+
+[[sections]]
+heading = "Scope and changes"
+body = "Work is limited to the scope and deliverables set out in this quote. Changes to scope are agreed in writing and may change the fee and timing."
+
+[[sections]]
+heading = "Fees and payment"
+body = "The fee is a fixed fee. Invoices are issued against this quote, including progress invoices where stated, and are payable within the payment terms shown on each invoice."
+
+[[sections]]
+heading = "Client inputs"
+body = "Timing depends on the client providing information, access and decisions when requested. Delays caused by late inputs may move delivery dates."
+
+[[sections]]
+heading = "Intellectual property"
+body = "TODO: state who owns the deliverables, models and tools, and when ownership or licence passes."
+
+[[sections]]
+heading = "Liability and confidentiality"
+body = "TODO: have these clauses written or reviewed professionally."
+
+[[sections]]
+heading = "Governing law"
+body = "These terms are governed by the laws of Victoria, Australia."

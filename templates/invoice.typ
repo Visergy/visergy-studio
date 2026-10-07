@@ -1,0 +1,74 @@
+// Invoice or tax invoice: one page, no cover. Data contract: see examples/render_examples.py.
+#import "base.typ": *
+
+#let data = load-data()
+#let inv = data.invoice
+#let b = data.business
+#show: setup.with(data, running-header: false)
+
+#grid(
+  columns: (1fr, auto),
+  align: (left + top, right + top),
+  logo(width: 50mm),
+  [
+    #text(size: 22pt, weight: "bold", fill: colours.primary, upper(data.doc.title)) \
+    #text(size: 12pt, data.doc.reference)
+  ],
+)
+#v(4mm)
+#line(length: 100%, stroke: 1pt + colours.accent)
+#v(4mm)
+
+#grid(
+  columns: (1fr, 1fr, auto),
+  column-gutter: 8mm,
+  party("Bill to", data.client.name, (
+    ..(if data.contact != none { ("Attn: " + data.contact.name,) } else { () }),
+    ..data.client.address,
+    ..(if data.client.abn != "" { (b.abn_label + " " + data.client.abn,) } else { () }),
+  )),
+  party("From", b.display_name, (b.abn_label + " " + b.abn, ..b.address, b.email)),
+  grid(
+    columns: 2,
+    column-gutter: 4mm,
+    row-gutter: 2mm,
+    label-text("Issued"), data.doc.date,
+    label-text("Due"), strong(inv.due_date),
+    label-text("Project"), data.project.number,
+    label-text("Quote"), inv.quote_reference,
+  ),
+)
+
+#v(10mm)
+#table(
+  columns: (1fr, auto),
+  align: (left, right),
+  stroke: (x, y) => if y == 0 { (bottom: 0.75pt + colours.primary) },
+  table.header(label-text("Description"), label-text("Amount")),
+  [#strong(data.project.title) \ #inv.description], inv.subtotal,
+)
+#align(right, table(
+  columns: (auto, 30mm),
+  align: (left, right),
+  stroke: none,
+  [Subtotal], inv.subtotal,
+  inv.tax_label, inv.tax,
+  table.hline(stroke: 0.75pt + colours.primary),
+  strong[Total due (#data.currency)], strong(inv.total),
+))
+
+#v(1fr)
+#block(fill: colours.primary.lighten(90%), inset: 5mm, width: 100%, radius: 2pt)[
+  #label-text("Payment") \
+  Please pay by #strong(inv.due_date) (#inv.payment_terms_days days) by bank transfer, quoting
+  #strong(data.doc.reference). \
+  #v(1mm)
+  #grid(
+    columns: 2,
+    column-gutter: 6mm,
+    row-gutter: 1.5mm,
+    label-text("Account name"), data.bank.account_name,
+    label-text("BSB"), data.bank.bsb,
+    label-text("Account"), data.bank.account_number,
+  )
+]

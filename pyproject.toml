@@ -1,0 +1,38 @@
+[project]
+name = "visergy-admin"
+version = "0.1.0"
+description = "Quotes and invoices for Visergy (sole trader, Melbourne): a tiny CLI over one SQLite database and Typst templates."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # PDF rendering. Pinned exactly (with uv.lock committed) so output stays reproducible.
+    "typst==0.15.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/visergy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "render: compiles Typst templates to PDF (needs the typst package and working templates)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

@@ -1,0 +1,33 @@
+# Copy to config.toml (gitignored) and fill in. Never commit config.toml: it holds bank details.
+# Override the location with the VISERGY_CONFIG environment variable.
+
+[business]
+name = "Your Legal Name"          # as registered against your ABN
+trading_as = "Visergy"            # leave "" if you do not trade under another name
+abn = "00 000 000 000"
+address = ["1 Example Street", "Melbourne VIC 3000"]
+email = "you@example.com"
+phone = "0400 000 000"
+gst_registered = true             # false => documents are "Invoice", tax is always 0%
+
+[bank]
+account_name = "Your Legal Name"
+bsb = "000-000"
+account_number = "00000000"
+
+[paths]
+# The live database. Local disk, ONE machine, NOT inside a synced folder.
+# Override with the VISERGY_DB environment variable.
+database = "~/.local/share/visergy/visergy.sqlite3"
+# Dated snapshots are written here after every change. Put this inside the synced (Nextcloud) folder.
+backup_dir = "~/Nextcloud/Visergy/backups"
+# Where `vis project new` creates project folders (optional; defaults to the current folder).
+projects_root = "~/Nextcloud/Visergy/projects"
+
+[defaults]
+quote_validity_days = 30
+terms_version = "v1"              # terms/terms-<version>.toml
+
+[backup]
+keep_last = 20                    # always keep the newest N snapshots
+keep_daily_days = 365             # and the newest snapshot of each UTC day for this many days

@@ -1,0 +1,30 @@
+# --- Secrets and live data: never commit ---
+config.toml
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3.part
+*.db
+backups/
+drafts/
+
+# --- Generated documents (issued PDFs live in project folders, not here) ---
+*.pdf
+
+# --- Python ---
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# --- Editor / OS ---
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# --- Example output (uv run python examples/render_examples.py) ---
+examples/output/
