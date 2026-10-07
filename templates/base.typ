@@ -67,8 +67,8 @@
 #let corner-sunburst = 130mm
 
 // Full-page cover. The blue field fills the top of the page down to a shallow diagonal, with a
-// translucent turquoise band of even depth along the cut; a small white sunburst sits in the
-// top-right corner. Title on blue, details on white at the lower right, contact strip at the
+// second blue stripe running parallel below it, separated by a narrow white gap. A small white
+// sunburst sits in the top-right corner. Title on blue, details on white at the lower right, contact strip at the
 // foot. `details` is a list of (label, value) pairs; empty values are skipped.
 #let cover(data, title, subtitle: none, details: ()) = page(
   header: none,
@@ -77,12 +77,14 @@
 )[
   #let b = data.business
   #let faint = white.transparentize(30%)
-  #let band = 20mm
-  // Diagonal from 110mm down the right edge to 200mm down the left edge.
-  #place(polygon(
-    fill: colours.accent.transparentize(35%),
-    (0mm, 0mm), (210mm, 0mm), (210mm, 110mm + band), (0mm, 200mm + band),
-  ))
+  // Diagonal from 110mm down the right edge to 200mm down the left edge. Drawn as three layers:
+  // the stripe's lower edge in blue, the white gap over it, then the main blue field on top.
+  #let stripe-bottom = 16mm
+  #let gap-bottom = 5mm
+  #place(polygon(fill: colours.primary,
+    (0mm, 0mm), (210mm, 0mm), (210mm, 110mm + stripe-bottom), (0mm, 200mm + stripe-bottom)))
+  #place(polygon(fill: white,
+    (0mm, 0mm), (210mm, 0mm), (210mm, 110mm + gap-bottom), (0mm, 200mm + gap-bottom)))
   #place(polygon(fill: colours.primary, (0mm, 0mm), (210mm, 0mm), (210mm, 110mm), (0mm, 200mm)))
   #place(top + left, dx: 210mm - corner-sunburst / 2, dy: -corner-sunburst / 2, brand-image("sunburst_white", corner-sunburst))
   #place(top + left, dx: 22mm, dy: 24mm, brand-image("white", 64mm))
@@ -114,16 +116,17 @@
 ]
 
 // Closing page: the cover turned through 180 degrees. White above, the blue field below a
-// diagonal with the translucent band on its upper side, the small sunburst in the bottom-left
+// diagonal with the separate blue stripe on its upper side, the small sunburst in the bottom-left
 // corner, a thin strip at the top, business details on white and the white logo on blue.
 #let back-page(data) = page(header: none, footer: none, margin: 0mm)[
   #let b = data.business
-  #let band = 20mm
   // The cover's cut, rotated: 187mm down the left edge up to 97mm down the right edge.
-  #place(polygon(
-    fill: colours.accent.transparentize(35%),
-    (0mm, 297mm), (210mm, 297mm), (210mm, 97mm - band), (0mm, 187mm - band),
-  ))
+  #let stripe-top = 16mm
+  #let gap-top = 5mm
+  #place(polygon(fill: colours.primary,
+    (0mm, 297mm), (210mm, 297mm), (210mm, 97mm - stripe-top), (0mm, 187mm - stripe-top)))
+  #place(polygon(fill: white,
+    (0mm, 297mm), (210mm, 297mm), (210mm, 97mm - gap-top), (0mm, 187mm - gap-top)))
   #place(polygon(fill: colours.primary, (0mm, 297mm), (210mm, 297mm), (210mm, 97mm), (0mm, 187mm)))
   #place(top + left, dx: -corner-sunburst / 2, dy: 297mm - corner-sunburst / 2, brand-image("sunburst_white", corner-sunburst))
   #place(top + left, rect(fill: colours.primary, width: 100%, height: 12mm))
