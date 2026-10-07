@@ -24,6 +24,11 @@ backup_dir = "~/Nextcloud/Visergy/backups"
 # Where `vis project new` creates project folders (optional; defaults to the current folder).
 projects_root = "~/Nextcloud/Visergy/projects"
 
+[numbering]
+# The last project number used before this tool (the 2014-2018 projects ended at 0058).
+# `vis init` starts the project counter after it; it is ignored once the counter exists.
+last_project = 58
+
 [defaults]
 quote_validity_days = 30
 terms_version = "v1"              # terms/terms-<version>.toml

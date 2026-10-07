@@ -23,7 +23,7 @@ address = ["Level 4, 200 Collins Street", "Melbourne VIC 3000"]
 name = "Sam Taylor"
 
 [project]
-number = "P2026-001"
+number = "0059"
 title = "Southbank residential tower"
 
 [invoice]

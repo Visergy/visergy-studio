@@ -12,7 +12,7 @@ from pathlib import Path
 from .errors import ProjectNotFound
 
 CONTROL_FILE = "project.txt"
-PROJECT_NUMBER_RE = re.compile(r"^P\d{4}-\d{3,}$")
+PROJECT_NUMBER_RE = re.compile(r"^\d{4}$")
 
 
 def find_project_dir(start: Path | None = None) -> Path:
@@ -31,8 +31,8 @@ def read_project_number(project_dir: Path) -> str:
     text = (project_dir / CONTROL_FILE).read_text(encoding="utf-8").strip()
     if not PROJECT_NUMBER_RE.match(text):
         raise ProjectNotFound(
-            f"{project_dir / CONTROL_FILE} must contain only a project number like P2026-001, "
-            f"found {text[:40]!r}"
+            f"{project_dir / CONTROL_FILE} must contain only a four-digit project number "
+            f"like 0059, found {text[:40]!r}"
         )
     return text
 
@@ -50,15 +50,20 @@ def write_control_file(project_dir: Path, number: str) -> Path:
     return path
 
 
-def pdf_filename(kind: str, number: str, version: int | None = None) -> str:
-    """Q-0001-v2.pdf for quotes, INV-0003.pdf for invoices."""
-    if kind == "quote":
-        if version is None:
-            raise ValueError("quotes need a version")
-        return f"{number}-v{version}.pdf"
+def pdf_filename(kind: str, number: str, version: int | str | None = None) -> str:
+    """Proposal_26001-v2.pdf, Invoice_26002.pdf, Report_0059-R01-B.pdf, like the old files.
+
+    `version` is the quote version (an int) or the report revision letter.
+    """
     if kind == "invoice":
-        return f"{number}.pdf"
-    raise ValueError(f"unknown document kind: {kind!r}")
+        return f"Invoice_{number}.pdf"
+    if kind not in ("quote", "report"):
+        raise ValueError(f"unknown document kind: {kind!r}")
+    if version is None:
+        raise ValueError(f"a {kind} needs a version")
+    if kind == "quote":
+        return f"Proposal_{number}-v{version}.pdf"
+    return f"Report_{number}-{version}.pdf"
 
 
 def relative_pdf_path(project_dir: Path, pdf_path: Path) -> str:
@@ -66,8 +71,8 @@ def relative_pdf_path(project_dir: Path, pdf_path: Path) -> str:
     return pdf_path.resolve().relative_to(project_dir.resolve()).as_posix()
 
 
-def folder_name(number: str, title: str, max_len: int = 60) -> str:
-    """'P2026-001 Thermal review' with filesystem-hostile characters removed."""
-    slug = re.sub(r"[^A-Za-z0-9 _-]+", "", title).strip()
-    slug = re.sub(r"\s+", " ", slug)[:max_len].strip()
-    return f"{number} {slug}".strip()
+def folder_name(number: str, title: str, max_len: int = 40) -> str:
+    """'0059-PhilipStreet': the project number and the title in CamelCase, like the old folders."""
+    words = re.findall(r"[A-Za-z0-9]+", title)
+    slug = "".join(w[0].upper() + w[1:] for w in words)[:max_len]
+    return f"{number}-{slug}" if slug else number

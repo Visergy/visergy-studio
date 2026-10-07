@@ -12,6 +12,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from visergy.money import format_money, format_rate_bp, rate_to_bp, to_cents, totals
+from visergy.paths import pdf_filename
 from visergy.render import render_pdf
 from visergy.reports import load_report_source, render_report
 from visergy.states import valid_until
@@ -58,7 +59,7 @@ def proposal_data(sample: dict, locale: dict) -> dict:
     rate_bp = rate_to_bp(locale["tax_rate"])
     t = totals(to_cents(body["fee"]), rate_bp)
     terms = load_terms("v1", REPO / "terms")
-    data = common_data(sample, locale, locale["quote_title"], "Q-0001 v1")
+    data = common_data(sample, locale, locale["quote_title"], "26001 v1")
     data["quote"] = {
         "title": body["title"],
         "summary": body["summary"].strip(),
@@ -83,10 +84,10 @@ def invoice_data(sample: dict, locale: dict) -> dict:
     rate_bp = rate_to_bp(locale["tax_rate"])
     t = totals(to_cents(sample["invoice"]["amount"]), rate_bp)
     days = locale["payment_terms_days"]
-    data = common_data(sample, locale, locale["tax_invoice_title"], "INV-0001")
+    data = common_data(sample, locale, locale["tax_invoice_title"], "26002")
     data["invoice"] = {
         "description": sample["invoice"]["description"],
-        "quote_reference": "Q-0001 v1",
+        "quote_reference": "26001 v1",
         "subtotal": format_money(t.subtotal_cents),
         "tax_label": tax_label(locale, rate_bp),
         "tax": format_money(t.tax_cents),
@@ -99,7 +100,7 @@ def invoice_data(sample: dict, locale: dict) -> dict:
 
 
 def report_data(sample: dict, locale: dict) -> dict:
-    data = common_data(sample, locale, locale["report_title"], "P2026-001-R01 Rev B")
+    data = common_data(sample, locale, locale["report_title"], "0059-R01 Rev B")
     data["report"] = {
         "revision": "B",
         "history": [
@@ -124,9 +125,11 @@ def main() -> None:
     OUTPUT.mkdir(exist_ok=True)
 
     outputs = {
-        "proposal-Q-0001-v1.pdf": render_pdf("proposal.typ", proposal_data(sample, locale)),
-        "invoice-INV-0001.pdf": render_pdf("invoice.typ", invoice_data(sample, locale)),
-        "report-P2026-001-R01-B.pdf": render_report(
+        pdf_filename("quote", "26001", 1): render_pdf(
+            "proposal.typ", proposal_data(sample, locale)
+        ),
+        pdf_filename("invoice", "26002"): render_pdf("invoice.typ", invoice_data(sample, locale)),
+        pdf_filename("report", "0059-R01", "B"): render_report(
             load_report_source(HERE / "report" / "report.md"), report_data(sample, locale)
         ),
     }

@@ -10,7 +10,7 @@ Out of scope: email, credit notes, payment tracking beyond a paid date, a front 
 
 ## 2. Where things live
 
-- **Project folders** sync to Nextcloud. Each has a visible control file, `project.txt`, containing only the project number (for example `P2026-001`). The CLI finds it by walking up from the current folder.
+- **Project folders** sync to Nextcloud. Each has a visible control file, `project.txt`, containing only the project number (for example `0059`). New project folders are named like the old ones: `0059-PhilipStreet`. The CLI finds it by walking up from the current folder.
 - **Live database**: one fixed local path, on one machine, never inside a synced folder. The path comes from `config.toml` or the `VISERGY_DB` environment variable. If the file is missing the CLI fails with a clear message instead of creating an empty one.
 - **Snapshots**: after every change, a dated copy of the database is written to the synced backup folder using SQLite's backup API. Keep the newest N plus the newest per UTC day.
 - **Brand assets** (`brand/`, committed): logo, `theme.toml` (colours, fonts, page setup) and bundled fonts. **Templates** live in `templates/`.
@@ -26,11 +26,11 @@ Every table has an internal integer `id`. Documents also have a unique human num
 |---|---|
 | `clients` | name, abn, address, notes |
 | `contacts` | client_id, name, email, phone, role |
-| `projects` | number (`P2026-001`), client_id, title, status |
+| `projects` | number (`0059`), client_id, title, status |
 | `project_contacts` | project_id, contact_id, role |
-| `quotes` | project_id, number (`Q-0001`, null until issued), version, status, body_json, fee_cents (ex-GST), tax_rate_bp, tax_cents, total_cents, validity_days, issue_date, terms_version, terms_hash, payment_terms_days, render_json, pdf_path, pdf_sha256 |
-| `invoices` | project_id, quote_id, number (`INV-0001`, null until issued), status, description, subtotal_cents, tax_rate_bp, tax_cents, total_cents, is_tax_invoice, issue_date, due_date, payment_terms_days, paid_date, render_json, pdf_path, pdf_sha256 |
-| `reports` | project_id, number (`P2026-001-R01`, null until first issued), revision (`A`, `B`, ...), status, title, source_path, source_sha256, issue_date, render_json, pdf_path, pdf_sha256 |
+| `quotes` | project_id, number (`26001`, null until issued; shared sequence with invoices), version, status, body_json, fee_cents (ex-GST), tax_rate_bp, tax_cents, total_cents, validity_days, issue_date, terms_version, terms_hash, payment_terms_days, render_json, pdf_path, pdf_sha256 |
+| `invoices` | project_id, quote_id, number (`26002`, null until issued; shared sequence with quotes), status, description, subtotal_cents, tax_rate_bp, tax_cents, total_cents, is_tax_invoice, issue_date, due_date, payment_terms_days, paid_date, render_json, pdf_path, pdf_sha256 |
+| `reports` | project_id, number (`0059-R01`, null until first issued), revision (`A`, `B`, ...), status, title, source_path, source_sha256, issue_date, render_json, pdf_path, pdf_sha256 |
 | `counters` | key, value (number allocation) |
 | `events` | ts, entity_type, entity_id, action, detail (append-only audit trail) |
 
@@ -69,9 +69,18 @@ Constraints to put in the schema:
 - A report is a Markdown file in the project folder, with a TOML front matter block between `+++` lines (title, subtitle, optional `toc = false`). Images use normal Markdown tags with paths relative to the Markdown file; the alt text becomes the figure caption.
 - Project number and title, client name and address and the project contact come from the database (found via `project.txt`), never from the Markdown.
 - Report statuses stored: draft, issued. **Superseded** is derived (a later revision is issued).
-- Numbers are per project (`P2026-001-R01`, counter key `report:P2026-001`), allocated at the first issue. Revisions are letters (`A`, `B`, ...). A new revision is a new row with the same number, like quote versions.
+- Numbers are per project (`0059-R01`, counter key `report:0059`), allocated at the first issue. Revisions are letters (`A`, `B`, ...). A new revision is a new row with the same number, like quote versions.
 - At issue the row freezes: the source path, a sha256 over the Markdown and every referenced image, the render JSON, the PDF path and its sha256.
 - The document control table in the PDF lists the issued revisions of that report number (revision, date, title) from the database.
+
+### Numbering
+
+Visergy traded from 2014 to 2018 (projects `0001` to `0058`, invoices `14004` to `14071`) and is restarting. The old records are not imported: they are not needed as a record (tax years long closed), and the old folders and the Saasu export in Nextcloud remain as the archive. The tool only continues the conventions, so new work looks continuous with the old.
+
+- **Projects**: four digits, one sequence that never resets. The counter is seeded once from `config.toml` (`numbering.last_project = 58`) so the first new project is `0059`. The `9001`-`9004` house projects were a separate series and are left alone.
+- **Quotes and invoices** share one sequence per calendar year: two-digit year plus a three-digit count, `26001`, `26002`, ... then `27001` from 1 January 2027. The old scheme was meant this way (it began `2014/01`, then `14004`) but never rolled over, so every old number is `14xxx` and none can collide. Quotes took numbers from the same sequence in the old scheme too, so invoice numbers have gaps; uniqueness is all the ATO needs. A quote revision keeps its number with a version: `26001 v2`.
+- **Reports**: per project, `0059-R01`, with lettered revisions.
+- **PDF names** follow the old files: `Proposal_26001-v1.pdf`, `Invoice_26002.pdf`, `Report_0059-R01-B.pdf`.
 
 ## 6. Issue procedure (one transaction)
 
@@ -129,7 +138,7 @@ vis status                     not yet invoiced, invoiced but unpaid
 4. `backup.py` (backup API, naming, pruning) with tests.
 5. `config.py`, then `invoicing.py` (cap rule, remainder) and `queries.py` (derived statuses) with tests.
 6. Render-data builders: turn database rows plus config and locale into the template JSON (replacing the sample builders in `examples/render_examples.py`).
-7. CLI: `init`, `backup`, `client`, `project`.
+7. CLI: `init` (creates the database and seeds the project counter from `numbering.last_project`), `backup`, `client`, `project`.
 8. Quote commands, then invoice commands, then report commands (`report-starter.md`, source hash at issue).
 9. `vis status`, polish, restore instructions.
 
@@ -140,7 +149,7 @@ Adopted from your original design: everything in sections 1 to 5 not marked belo
 Proposed defaults (answers to your open questions plus additions). Change any of them freely:
 
 - Quote text format is TOML, stored as JSON in the database.
-- Numbering is continuous and never resets for quotes and invoices; project numbers reset each year.
+- Numbering continues the conventions Visergy used in 2014-2018 (see "Numbering" in section 5).
 - One machine uses the database.
 - Standard terms are versioned files in git, with the version and a content hash stored on each quote.
 - Render data is snapshotted at issue so later config or client edits cannot change a frozen document.
@@ -168,3 +177,4 @@ Still open:
 - Exact wording of the standard terms (the v1 file is a starting draft).
 - How a restore should work (a `vis restore` command, or documented manual steps).
 - Whether a report can be issued for a project with no accepted quote.
+- Docker: proposed to skip (single-user CLI, live database on local disk, backups to Nextcloud), not yet confirmed. The global preference is to containerise by default.

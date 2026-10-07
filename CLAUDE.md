@@ -2,13 +2,13 @@
 
 A tiny Python CLI (`vis`, managed with uv, no front end) that produces proposals (quotes), invoices and Markdown-authored reports for Visergy, a Melbourne sole-trader consulting business. One central SQLite database, Typst templates for the PDFs, brand assets in `brand/`.
 
-Read `docs/DESIGN.md` first. It holds the data model, the rules and the build order.
+Read `docs/DESIGN.md` first. It holds the data model, the rules and the build order. `HANDOFF.md` says where the last session stopped.
 
 ## State of the repo
 
 This is a starter kit, not a working app.
 
-- Present: `pyproject.toml`, `config.example.toml`, `locale.toml`, `terms/terms-v1.toml`, `examples/quote.toml`, `brand/theme.toml` (placeholder colours), core modules in `src/visergy/` (`money`, `states`, `paths`, `numbering`, `terms`, `errors`, `render`, `reports`) with tests, Typst templates in `templates/` (proposal, invoice, report), and `examples/render_examples.py`, which renders all three from sample data.
+- Present: `pyproject.toml`, `config.example.toml`, `locale.toml`, `terms/terms-v1.toml`, `examples/quote.toml`, `brand/` (logos, theme colours, fonts), core modules in `src/visergy/` (`money`, `states`, `paths`, `numbering`, `terms`, `errors`, `render`, `reports`) with tests, Typst templates in `templates/` (proposal, invoice, report), and `examples/render_examples.py`, which renders all three from sample data.
 - Missing: SQL schema and migrations, `db`, `backup`, `config`, `invoicing`, `queries`, the render-data builders and `cli`.
 - `numbering.py` assumes a `counters(key, value)` table that the schema must provide.
 - `[project.scripts]` is not set yet. Add `vis = "visergy.cli:main"` once `cli.py` exists.
@@ -39,6 +39,7 @@ uv run ruff check . && uv run ruff format .
 - Expected user-facing failures raise a subclass of `VisergyError`; the CLI prints `error: ...` and exits 1.
 - Open SQLite connections with `isolation_level=None` and manage transactions explicitly (`BEGIN IMMEDIATE`).
 - Dates are ISO `YYYY-MM-DD` text; timestamps are UTC ISO text.
+- Numbering continues Visergy's 2014-2018 conventions (projects `0059`, quotes and invoices `26001`): see "Numbering" in `docs/DESIGN.md`.
 - Australian specifics (GST, titles, terms days, financial year) live in `locale.toml`, not in code.
 
 ## Working agreement
