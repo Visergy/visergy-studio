@@ -173,7 +173,8 @@
 
 // "field" style, after a reference cover: one blue field and nothing dividing the page, a header
 // row (logo, rule, date), a large title as the clear focal point, a large fine-line sunburst off
-// the lower right as the one graphic, and a small block of details at the lower left.
+// the lower right as the one graphic, and a small "Prepared for" block at the lower left. The
+// logo says who it is from; the email and copyright line are on the back page.
 // The date is in the header, so the "Date" detail is not repeated. Colours, logo and sunburst
 // come from brand/theme.toml [cover] field_* settings.
 #let field-theme = theme.at("cover", default: (:))
@@ -189,7 +190,6 @@
   margin: 0mm,
   fill: field-background,
 )[
-  #let b = data.business
   #let x = cover-margin
   #let soft = field-accent.transparentize(15%)
   // Centred beyond the lower-right corner, so the rays stop well clear of the details block.
@@ -230,16 +230,11 @@
       row-gutter: 2.6mm,
       ..rest.map(d => (label-text(d.at(0), fill: soft), d.at(1))).flatten()
     )
-    #v(5mm)
-    #label-text("Prepared by", fill: soft) \
-    #text(weight: "semibold", b.display_name) · #b.email
-    #v(3mm)
-    #text(size: 7.5pt, fill: soft, data.doc.copyright)
   ])
 ]
 
 // "field" back page: the same blue field, the fine sunburst off the upper left to answer the
-// cover's lower right, and the logo and business details at the lower right.
+// cover's lower right, and the logo, business details and copyright line at the lower right.
 #let back-page-field(data, contact: false) = page(
   header: none,
   footer: none,
@@ -258,6 +253,8 @@
     #b.abn_label #b.abn
     #if contact [\ #lines(b.address) \ #b.phone]
     \ #b.email
+    #v(6mm)
+    #text(size: 8pt, fill: white.transparentize(30%), data.doc.copyright)
   ])
 ]
 
