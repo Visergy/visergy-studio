@@ -11,6 +11,7 @@ from here; nothing in this folder is sensitive.
   for the "field" cover style.
   Generated from `sunburst-white.svg` by `make_thin_sunburst.py` (keeps each ray's angle and
   length); re-run it if the artwork changes.
+- `email-signature/`: the HTML email signature and its logo PNG (see the README there).
 - `fonts/`: Source Sans 3 (SIL Open Font License, see `fonts/LICENSE-SourceSans3.md`).
 
 ## Where these came from
