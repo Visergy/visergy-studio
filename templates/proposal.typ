@@ -43,7 +43,7 @@
     (
       [Fixed fee (excluding #q.tax_name)], q.fee,
       q.tax_label, q.tax,
-      table.hline(stroke: 0.75pt + colours.primary),
+      table.hline(stroke: 0.75pt + colours.deep),
       strong[Total], strong(q.total),
     )
   } else {

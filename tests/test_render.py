@@ -1,11 +1,14 @@
 """Compiles the real templates via the example script's data. Marked `render` (slower)."""
 
 import importlib.util
+import re
+import shutil
 from datetime import date
 from pathlib import Path
 
 import pytest
 
+import visergy.render
 from visergy.errors import RenderError
 from visergy.render import format_date, render_pdf
 from visergy.reports import load_report_source, render_report
@@ -97,3 +100,34 @@ def test_template_errors_become_render_errors(ex):
     del data["quote"]
     with pytest.raises(RenderError):
         render_pdf("proposal.typ", data)
+
+
+@pytest.fixture
+def brand_with_style(tmp_path, monkeypatch):
+    """A copy of brand/ with a different cover style, used in place of the real one."""
+
+    def use(style):
+        brand = tmp_path / "brand"
+        shutil.copytree(visergy.render.BRAND_DIR, brand)
+        theme = brand / "theme.toml"
+        text = theme.read_text(encoding="utf-8")
+        text, count = re.subn(r'(?m)^style = ".*"', f'style = "{style}"', text)
+        assert count == 1
+        theme.write_text(text, encoding="utf-8")
+        monkeypatch.setattr(visergy.render, "BRAND_DIR", brand)
+
+    return use
+
+
+@pytest.mark.parametrize("style", ["diagonal", "field"])
+def test_cover_styles(ex, brand_with_style, style):
+    brand_with_style(style)
+    assert render_pdf("proposal.typ", ex.proposal_data(ex.sample, ex.locale)).startswith(b"%PDF")
+    source = load_report_source(EXAMPLES / "report" / "report.md")
+    assert render_report(source, ex.report_data(ex.sample, ex.locale)).startswith(b"%PDF")
+
+
+def test_unknown_cover_style_is_rejected(ex, brand_with_style):
+    brand_with_style("wavy")
+    with pytest.raises(RenderError, match="unknown cover style"):
+        render_pdf("proposal.typ", ex.proposal_data(ex.sample, ex.locale))

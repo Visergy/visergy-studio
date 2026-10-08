@@ -7,6 +7,10 @@ from here; nothing in this folder is sensitive.
 - `logo.svg`, `logo-white.svg`: the wordmark in turquoise and white.
 - `sunburst.svg`, `sunburst-white.svg`: the radial-lines graphic, used cropped off the page edge
   on the cover and back page (as on the business card).
+- `sunburst-thin-white.svg`, `sunburst-thin-turquoise.svg`: the same rays redrawn as fine lines,
+  for the "field" cover style.
+  Generated from `sunburst-white.svg` by `make_thin_sunburst.py` (keeps each ray's angle and
+  length); re-run it if the artwork changes.
 - `fonts/`: Source Sans 3 (SIL Open Font License, see `fonts/LICENSE-SourceSans3.md`).
 
 ## Where these came from

@@ -83,7 +83,11 @@ trigger and constraint. Points from the review that the schema has to settle:
 ## Parked for later
 
 - Cover refinements: the diagonal (`cut-right`, `cut-left`), sunburst size (`corner-sunburst`),
-  margins and title sizes are constants just above `cover()` in `templates/base.typ`.
+  margins and title sizes are constants just above `cover-diagonal()` in `templates/base.typ`.
+- Cover style: `brand/theme.toml` `[cover] style` is `field` (deep blue `#0a3443`, turquoise
+  accents and fine sunburst, large white title) since 2026-10-08; `diagonal` is still available.
+  Inside pages use the same deep blue for headings and rules. `#0d4559` is a lighter cover option
+  if `#0a3443` feels too dark.
 - A Myriad Pro licence that allows PDF embedding would let the real brand font replace
   Source Sans 3 (one line in `brand/theme.toml`).
 

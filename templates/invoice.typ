@@ -11,7 +11,7 @@
   align: (left + top, right + top),
   logo(width: 50mm),
   [
-    #text(size: 22pt, weight: "bold", fill: colours.primary, upper(data.doc.title)) \
+    #text(size: 22pt, weight: "bold", fill: colours.deep, upper(data.doc.title)) \
     #text(size: 12pt, data.doc.reference)
   ],
 )
@@ -43,7 +43,7 @@
 #table(
   columns: (1fr, auto),
   align: (left, right),
-  stroke: (x, y) => if y == 0 { (bottom: 0.75pt + colours.primary) },
+  stroke: (x, y) => if y == 0 { (bottom: 0.75pt + colours.deep) },
   table.header(label-text("Description"), label-text("Amount")),
   [#strong(data.project.title) \ #inv.description], inv.subtotal,
 )
@@ -56,7 +56,7 @@
     (
       [Subtotal], inv.subtotal,
       inv.tax_label, inv.tax,
-      table.hline(stroke: 0.75pt + colours.primary),
+      table.hline(stroke: 0.75pt + colours.deep),
     )
   },
   strong[Total due (#data.currency)], strong(inv.total),
@@ -68,7 +68,7 @@
 }
 
 #v(1fr)
-#block(fill: colours.primary.lighten(90%), inset: 5mm, width: 100%, radius: 2pt)[
+#block(fill: colours.deep.lighten(92%), inset: 5mm, width: 100%, radius: 2pt)[
   #label-text("Payment") \
   Please pay by #strong(inv.due_date) (#inv.payment_terms_days days) by bank transfer, quoting
   #strong(data.doc.reference). \

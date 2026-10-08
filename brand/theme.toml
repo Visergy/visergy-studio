@@ -2,7 +2,8 @@
 # Colours sampled from the brand files (see brand/README.md).
 
 [colours]
-primary = "#0d8dbb"               # business card blue: cover panel, headings
+primary = "#0d8dbb"               # business card blue: the "diagonal" cover panel
+deep = "#0a3443"                  # deep blue in the same hue: headings, rules, the "field" cover
 accent = "#00abbf"                # logo turquoise: rules, highlights
 text = "#262626"
 muted = "#595959"                 # labels, headers, footers, captions
@@ -16,6 +17,19 @@ file = "logo.svg"                 # turquoise wordmark, for white backgrounds
 white = "logo-white.svg"          # for the blue cover panel
 sunburst = "sunburst.svg"         # radial lines, back page
 sunburst_white = "sunburst-white.svg"  # radial lines, cover panel
+sunburst_thin = "sunburst-thin-white.svg"  # fine radial lines, "field" cover (brand/make_thin_sunburst.py)
+sunburst_thin_turquoise = "sunburst-thin-turquoise.svg"
+
+[cover]
+# "diagonal": blue field down to a diagonal, details on white below (the 2026-10-08 design).
+# "field": all blue, a large title, and a large fine-line sunburst off the lower right.
+style = "field"
+# Colours for the "field" style. `logo` and `sunburst` are keys from [logo] above.
+field_background = "#0a3443"
+field_accent = "#00abbf"          # kicker, header rule and label text (4.8:1 on the background)
+field_title = "#ffffff"
+field_logo = "file"
+field_sunburst = "sunburst_thin_turquoise"
 
 [page]
 paper = "a4"

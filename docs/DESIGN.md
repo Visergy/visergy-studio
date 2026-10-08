@@ -200,6 +200,10 @@ Config (2026-10-08):
 - Not registered for GST: proposals show the fixed fee alone and invoices show the total alone, each with a "No GST is charged" note, rather than a 0% GST row. The invoice title is "Invoice".
 - `examples/render_examples.py` uses the business and bank details from `config.toml` when it exists; the render tests always use `examples/sample.toml`.
 
+- Cover style is a setting, `brand/theme.toml` `[cover] style` (added 2026-10-08). `diagonal` is the current design and the default. `field`, after a reference cover, is one blue field with no divisions: a header row (logo, rule, date), a large title (54/44/34pt), a large fine-line sunburst off the lower right as the one graphic, and a small "Prepared for / Prepared by" block at the lower left; its back page answers with the sunburst off the upper left. The logo turquoise is too close in brightness to the card blue to carry the graphic, so the fine sunburst is white. Its colours come from `[cover] field_*` settings (background, accent, title, logo, sunburst), so it can also run on a dark blue in the card blue's hue, where the turquoise logo, accents and a turquoise fine sunburst stand out: turquoise on `#0a3443` is 4.8:1 against 1.4:1 on the card blue.
+
+- Default since 2026-10-08: the `field` cover on deep blue `#0a3443` (the card blue's hue, darker) with turquoise accents, the turquoise logo and the turquoise fine sunburst, and a white title. The same deep blue (`colours.deep`) is used inside every document for headings, the invoice title and table rules, so documents use two colours: deep blue and turquoise. The card blue (`colours.primary`) is now only the `diagonal` cover's panel. If the cover feels too dark, `field_background = "#0d4559"` is a lighter step in the same hue (turquoise 3.8:1).
+
 Still open:
 
 - Exact wording of the standard terms (the v1 file is a starting draft).
